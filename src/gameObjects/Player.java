@@ -15,6 +15,8 @@ import input.MouseManager;
 import main.Window;
 import math.Vector2;
 import states.GameState;
+import states.MenuState;
+import states.State;
 
 public class Player extends MovingGameObject{
 
@@ -37,7 +39,6 @@ public class Player extends MovingGameObject{
         super(position, velocity, maxVel, texture, gameState);
         heading = new Vector2(0, 1);
         acceleration = new Vector2();
-        this.gameState = gameState;
         fireRate = new Chronometer();
         spawnTime = new Chronometer();
         flickerTime = new Chronometer();
@@ -46,6 +47,9 @@ public class Player extends MovingGameObject{
         laserSound = new Sound(Assets.playerShoot);
         playerHit = new Sound(Assets.playerLoose);
         gameOverSound = new Sound(Assets.gameOverSound);
+        spawing = true;
+        spawnTime.run(Constants.SPAWNING_TIME);
+        //visible = true;
     }
 
     @Override
@@ -63,7 +67,7 @@ public class Player extends MovingGameObject{
             }
         }
 
-        if (KeyBoard.SHOOT && !fireRate.isRunning() && spawing == false || MouseManager.drawReady && !fireRate.isRunning()  && spawing == false) {
+        if ((KeyBoard.SHOOT && !fireRate.isRunning() && spawing == false) || (MouseManager.drawReady && !fireRate.isRunning()  && spawing == false)) {
             
             if(isCharged){
                 gameState.getMovingObjects().add(0,new LaserCharged(
@@ -86,7 +90,7 @@ public class Player extends MovingGameObject{
                 true
             ));
             }
-            laserSound.play();
+            //laserSound.play();
             fireRate.run(Constants.FIRE_RATE);
 
             //acceleration = heading.scale(-10.0);
@@ -172,26 +176,24 @@ public class Player extends MovingGameObject{
 
         g2d.drawImage(Assets.player, at, null);
 
-        //g.setColor(Color.red);
+        g.setColor(Color.red);
         //g.fillRect((int) position.getX(), (int) position.getY(), width, height);
-        //g.drawOval((int) position.getX(), (int) position.getY(), width, height);
+        g.drawOval((int) position.getX(), (int) position.getY(), width, height);
     }
     
     @Override
     public void Destroy(){
         spawing = true;
         spawnTime.run(Constants.SPAWNING_TIME);
-        gameState.getMessages().add(new Message("-1 Life", position, Color.RED, true, true, Assets.fontMed, gameState));
         
-        gameState.lives--;
-        
-        if(gameState.lives > 0){
-            playerHit.play();
-        }
-        if(gameState.lives == 0){
+        playerHit.play();
+
+        if(!gameState.subtractLife()){
             gameOverSound.play();
+            gameState.gameOver();
             super.Destroy();
         }
+        gameState.getMessages().add(new Message("-1 Life", position, Color.RED, true, true, true, Assets.fontMed, gameState));
         resetValues();
     }
 

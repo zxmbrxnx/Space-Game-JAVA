@@ -1,5 +1,6 @@
 package gameObjects;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
@@ -49,8 +50,8 @@ public class Meteor extends MovingGameObject{
 
         g2d.drawImage(texture, at, null);
         
-        //g.setColor(Color.red);
-        //g.drawOval((int) position.getX(), (int) position.getY(), width, height);
+        g.setColor(Color.red);
+        g.drawOval((int) position.getX(), (int) position.getY(), width, height);
     }
 
     @Override

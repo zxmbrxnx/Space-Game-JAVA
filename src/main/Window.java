@@ -6,6 +6,9 @@ import graphics.Assets;
 import input.KeyBoard;
 import input.MouseManager;
 import states.GameState;
+import states.LoadingState;
+import states.MenuState;
+import states.State;
 
 import java.awt.Canvas;
 import java.awt.Color;
@@ -31,7 +34,6 @@ public class Window extends JFrame implements Runnable{
     private double delta = 0;
     private int AVERAGEFPS = FPS;
 
-    private GameState gameState;
     private KeyBoard keyBoard;
     Cursor _cursor;
     Image cursorImage;
@@ -47,10 +49,6 @@ public class Window extends JFrame implements Runnable{
 
         canvas = new Canvas();
         keyBoard = new KeyBoard();
-        
-        //Cursor
-        cursorImage = Toolkit.getDefaultToolkit().getImage("res/cursor/cursor.png");
-        _cursor = Toolkit.getDefaultToolkit().createCustomCursor(cursorImage, new Point(0, 0), "cursor_personalizado");
 
         m = new MouseManager();
 	
@@ -64,7 +62,7 @@ public class Window extends JFrame implements Runnable{
         canvas.addKeyListener(keyBoard);
         canvas.addMouseListener(m);
 		canvas.addMouseMotionListener(m);
-        canvas.setCursor(_cursor);
+        
 
         setVisible(true);
     }
@@ -74,7 +72,17 @@ public class Window extends JFrame implements Runnable{
 
     public void update() {
         keyBoard.update();
-        gameState.update();
+        State.getCurrentState().update();
+
+        //Cambiar cursor
+        if(State.getCurrentState() instanceof GameState){
+            //Cursor
+            cursorImage = Toolkit.getDefaultToolkit().getImage("res/cursor/cursor.png");
+            _cursor = Toolkit.getDefaultToolkit().createCustomCursor(cursorImage, new Point(0, 0), "cursor_personalizado");
+            canvas.setCursor(_cursor);
+        }else{
+            canvas.setCursor(Cursor.getDefaultCursor());
+        }
         //System.out.println("Position X: " + m.mouse_x + "\n Position Y: " + m.mouse_y);
     }
 
@@ -91,21 +99,32 @@ public class Window extends JFrame implements Runnable{
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, Constants.WIDTH, Constants.HEIGHT);
 
-        gameState.draw(g);
+        // Mostrar FPS del juego
+        g.setFont(null);
+        g.setColor(Color.WHITE);
+        g.drawString("FPS: " + AVERAGEFPS, 10, 550);
         
-
-        //g.setFont(null);
-        //g.setColor(Color.WHITE);
-        //g.drawString("FPS: " + AVERAGEFPS, 10, 550);
+        State.getCurrentState().draw(g);
+        
+        g.setFont(null);
         // End drawing
         g.dispose();
         bs.show();
     }
 
     private void init() {
-        // Initialize here
-        Assets.init();
-        gameState = new GameState();
+
+        Thread loadingThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // Initialize here
+                Assets.init();
+            }
+            
+        });
+
+
+        State.changeState(new LoadingState(loadingThread));
     }
 
     @Override

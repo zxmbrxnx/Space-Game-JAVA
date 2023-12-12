@@ -22,6 +22,8 @@ public abstract class MovingGameObject extends GameObject{
 
     protected Sound explSound;
 
+    protected boolean Dead;
+
 
     public MovingGameObject(Vector2 position, Vector2 velocity, Double maxVel, BufferedImage texture, GameState gameState) {
         super(position, texture);
@@ -32,6 +34,7 @@ public abstract class MovingGameObject extends GameObject{
         angle = 0;
         this.gameState = gameState;
         explSound = new Sound(Assets.explosion);
+        Dead = false;
 
     }
 
@@ -47,7 +50,7 @@ public abstract class MovingGameObject extends GameObject{
 			
 			double distance = m.getCenter().subtract(getCenter()).getMagnitude();
 			
-			if(distance < m.width/2 + width/2 && movingObjects.contains(this)){
+			if(distance < m.width/2 + width/2 && movingObjects.contains(this) && !m.Dead && !Dead){
 				objectCollision(m, this);
 			}
 		}
@@ -94,9 +97,11 @@ public abstract class MovingGameObject extends GameObject{
     }
 
     protected void Destroy() {
-        gameState.getMovingObjects().remove(this);
+        Dead = true;
         if(!(this instanceof Laser) && !(this instanceof LaserCharged) && !(this instanceof Meteor) ){
             explSound.play();
         }
     }
+
+    public boolean isDead() {return Dead;}
 }

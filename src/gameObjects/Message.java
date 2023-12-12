@@ -20,14 +20,16 @@ public class Message {
     private Color color;
     private boolean center;
     private boolean fade;
+    private boolean move = false;
     private Font font;
 
-    public Message(String text,Vector2 position, Color color, boolean center, boolean fade, Font font, GameState gameState) {
+    public Message(String text,Vector2 position, Color color, boolean center, boolean fade, boolean move, Font font, GameState gameState) {
         this.position = position;
         this.text = text;
         this.color = color;
         this.center = center;
         this.fade = fade;
+        this.move = move;
         this.font = font;
         this.gameState = gameState;
 
@@ -45,7 +47,9 @@ public class Message {
         Text.drawText(g2d, text, position, center, color, font);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
-        position.setY(position.getY() - 1);
+        if(move){
+            position.setY(position.getY() - 1);
+        }
 
         if(fade){
             alpha -= deltaAlpha;

@@ -7,6 +7,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import gameObjects.Chronometer;
 import gameObjects.Constants;
 import gameObjects.EnemyAlien;
 import gameObjects.GameObject;
@@ -18,11 +19,12 @@ import gameObjects.Size;
 import graphics.Animation;
 import graphics.Assets;
 import graphics.Sound;
-import graphics.Text;
 import math.Vector2;
 
-public class GameState {
+public class GameState extends State{
 
+    public static final Vector2 PLAYER_START_POSITION = new Vector2(Constants.WIDTH/2 - Assets.player.getWidth()/2,
+        Constants.HEIGHT/2 - Assets.player.getHeight()/2);
     private Player player;
     private ArrayList<MovingGameObject> movingObjects = new ArrayList<MovingGameObject>();
     private ArrayList<GameObject> Objects = new ArrayList<GameObject>();
@@ -35,22 +37,33 @@ public class GameState {
     private int meteors;
     private int waves = 1;
 
+	private Chronometer gameOverTimer;
+	private boolean gameOver;
+
+    private Chronometer alienSpawner;
+
     private Sound backgrounSound;
 
     public GameState() {
-        player = new Player(new Vector2(Constants.WIDTH/2 - Assets.player.getWidth()/2, Constants.HEIGHT/2 - Assets.player.getHeight()/2), new Vector2(),(double) 5, Assets.player, this);
+
+
+        player = new Player(PLAYER_START_POSITION, new Vector2(), Constants.PLAYER_MAX_VEL, Assets.player, this);
+        gameOverTimer = new Chronometer();
+		gameOver = false;
         movingObjects.add(player);
         backgrounSound = new Sound(Assets.backgroundMusic);
         meteors = 1;
 
-        startWave();
         //backgrounSound.changeVolume(-10.0f);
         //backgrounSound.loop();
+
+        alienSpawner = new Chronometer();
+        alienSpawner.run(Constants.ALIEN_SPAWN_RATE);
     }
 
     private void startWave() {
 
-        messages.add(new Message("Oleada " + waves, new Vector2(Constants.WIDTH/2, Constants.HEIGHT/2),  Color.WHITE, true, true, Assets.fontBig, this));
+        messages.add(new Message("Oleada " + waves, new Vector2(Constants.WIDTH/2, Constants.HEIGHT/2),  Color.GREEN, true, true,false, Assets.fontBig, this));
 
         double x, y;
         for(int i = 0; i < meteors; i++){
@@ -72,7 +85,6 @@ public class GameState {
         }
         meteors++;
         waves++;
-        spawnAlien();
     }
 
     private void spawnAlien(){
@@ -122,7 +134,12 @@ public class GameState {
 
     public void update() {
         for(int i = 0; i < movingObjects.size(); i++){
-            movingObjects.get(i).update();
+            MovingGameObject mo = movingObjects.get(i);
+            mo.update();
+            if(mo.isDead()){
+                movingObjects.remove(i);
+                i--;
+            }
         }
         for(int i = 0; i < Objects.size(); i++){
             Objects.get(i).update();
@@ -136,6 +153,19 @@ public class GameState {
             }
         }
 
+        if(gameOver && !gameOverTimer.isRunning()) {
+			State.changeState(new MenuState());
+		}
+		
+		
+		if(!alienSpawner.isRunning()) {
+			alienSpawner.run(Constants.ALIEN_SPAWN_RATE);
+			spawnAlien();
+		}
+		
+		gameOverTimer.update();
+		alienSpawner.update();
+
         for(int i = 0; i < movingObjects.size(); i++){
             if (movingObjects.get(i) instanceof Meteor){
                 return;
@@ -147,7 +177,7 @@ public class GameState {
 
     public void addScore(int value, Vector2 position){
         score += value;
-        messages.add(new Message("+" + value, position, Color.WHITE, true, true, Assets.fontMed, this));
+        messages.add(new Message("+" + value, position, Color.WHITE, true, true,true, Assets.fontMed, this));
     }
 
     public void divideMeteoro(Meteor meteor){
@@ -207,6 +237,11 @@ public class GameState {
     }
 
     private void drawLives(Graphics g){
+
+        if(lives < 1){
+            return;
+        }
+
         Vector2 livePos = new Vector2(20, 10);
         
         g.drawImage(Assets.player, (int) livePos.getX(), (int) livePos.getY(),Assets.player.getWidth() -10, Assets.player.getWidth() -10,null);
@@ -270,5 +305,24 @@ public class GameState {
         return player;
     }
 
+    public boolean subtractLife() {
+		lives --;
+		return lives > 0;
+	}
+	
+	public void gameOver() {
+		Message gameOverMsg = new Message(
+            	"GAME OVER",
+				PLAYER_START_POSITION,
+				Color.WHITE,
+				true,
+                false,
+                false,
+				Assets.fontBig,this);
+		
+		this.messages.add(gameOverMsg);
+		gameOverTimer.run(Constants.GAME_OVER_TIME);
+		gameOver = true;
+	}
     
 }

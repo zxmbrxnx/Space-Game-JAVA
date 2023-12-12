@@ -110,7 +110,7 @@ public class EnemyAlien extends MovingGameObject{
                 currentAngle = -currentAngle + Math.PI;
 
             toPlayer = toPlayer.setDirection(currentAngle);
-            alienShoot.play();
+            //alienShoot.play();
             Laser laser = new Laser(
                 getCenter().add(toPlayer.scale(width)), 
                 toPlayer, 
@@ -148,6 +148,9 @@ public class EnemyAlien extends MovingGameObject{
         if(enemyLives == 1){
             g.fillRect((int) position.getX(), (int) position.getY() -5, width/4, 5);
         }
+        g.setColor(Color.red);
+        //g.fillRect((int) position.getX(), (int) position.getY(), width, height);
+        g.drawOval((int) position.getX(), (int) position.getY(), width, height);
 
         // PATH
         /*
